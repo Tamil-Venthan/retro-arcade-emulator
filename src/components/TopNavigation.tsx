@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface TopNavigationProps {
-  onNavClick: (target: 'games' | 'multiplayer' | 'leaderboard' | 'save' | 'controllers') => void;
-  onOpenDeployGuide: () => void;
+  onNavClick: (target: 'games' | 'multiplayer' | 'leaderboard' | 'save' | 'controllers' | 'roms') => void;
+  onOpenDeployGuide?: () => void;
 }
 
 export const TopNavigation: React.FC<TopNavigationProps> = ({
@@ -59,14 +59,14 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
           </button>
         </nav>
 
-        {/* Zone 3: 1 primary action */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Zone 3: 1-Click ROM Vault trigger */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={onOpenDeployGuide}
-            className="px-4 py-2 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-sm transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5"
+            onClick={() => onNavClick('roms')}
+            className="px-3.5 py-1.5 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-sm transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5"
           >
-            <span>▲</span> Deploy Vercel
+            <span>⚡</span> 1-Click ROMs
           </button>
         </div>
       </div>

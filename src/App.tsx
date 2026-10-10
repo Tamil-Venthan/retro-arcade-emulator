@@ -16,6 +16,7 @@ import { SaveStatesModal } from './components/SaveStatesModal';
 import { LeaderboardModal } from './components/LeaderboardModal';
 import { MultiplayerModal } from './components/MultiplayerModal';
 import { RomLoaderModal } from './components/RomLoaderModal';
+import { InstantRomLibraryModal } from './components/InstantRomLibraryModal';
 import { VercelDeployGuideModal } from './components/VercelDeployGuideModal';
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
   const [leaderboardScoreToSubmit, setLeaderboardScoreToSubmit] = useState<number | undefined>(undefined);
   const [isMultiplayerModalOpen, setIsMultiplayerModalOpen] = useState(false);
   const [isRomModalOpen, setIsRomModalOpen] = useState(false);
+  const [isInstantLibraryOpen, setIsInstantLibraryOpen] = useState(false);
   const [isDeployGuideOpen, setIsDeployGuideOpen] = useState(false);
 
   // Custom ROM upload
@@ -59,8 +61,11 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleNavClick = (target: 'games' | 'multiplayer' | 'leaderboard' | 'save' | 'controllers') => {
+  const handleNavClick = (target: 'games' | 'multiplayer' | 'leaderboard' | 'save' | 'controllers' | 'roms') => {
     switch (target) {
+      case 'roms':
+        setIsInstantLibraryOpen(true);
+        break;
       case 'games':
         document.getElementById('games-library')?.scrollIntoView({ behavior: 'smooth' });
         break;
@@ -122,6 +127,8 @@ export default function App() {
               setIsLeaderboardModalOpen(true);
             }}
             onOpenRomModal={() => setIsRomModalOpen(true)}
+            onOpenInstantLibrary={() => setIsInstantLibraryOpen(true)}
+            onDirectBootRom={(bytes, name) => handleLoadCustomRom(bytes, name, 'nes')}
             customRomBytes={customRomBytes}
             customRomName={customRomName}
             gameEngineRef={gameEngineRef}
@@ -247,6 +254,12 @@ export default function App() {
         isOpen={isRomModalOpen}
         onClose={() => setIsRomModalOpen(false)}
         onLoadCustomRom={handleLoadCustomRom}
+      />
+
+      <InstantRomLibraryModal
+        isOpen={isInstantLibraryOpen}
+        onClose={() => setIsInstantLibraryOpen(false)}
+        onSelectRom={(bytes, name) => handleLoadCustomRom(bytes, name, 'nes')}
       />
 
       <VercelDeployGuideModal

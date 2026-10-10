@@ -11,6 +11,7 @@ import { CyberRacerGame } from '../games/CyberRacerGame';
 import { BrickBreakerGame } from '../games/BrickBreakerGame';
 import { Chip8Emulator } from '../games/Chip8Emulator';
 import { NesEmulator } from '../games/NesEmulator';
+import { INSTANT_ROMS, downloadAndParseRom } from '../games/instantRoms';
 
 interface GameScreenProps {
   game: GameMetadata;
@@ -22,6 +23,8 @@ interface GameScreenProps {
   onOpenControllerModal: () => void;
   onOpenLeaderboardModal: (finalScore?: number) => void;
   onOpenRomModal: () => void;
+  onOpenInstantLibrary: () => void;
+  onDirectBootRom: (bytes: Uint8Array, name: string) => void;
   customRomBytes?: Uint8Array | null;
   customRomName?: string;
   gameEngineRef: React.MutableRefObject<ActiveGameEngine | null>;
@@ -38,6 +41,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   onOpenControllerModal,
   onOpenLeaderboardModal,
   onOpenRomModal,
+  onOpenInstantLibrary,
+  onDirectBootRom,
   customRomBytes,
   customRomName,
   gameEngineRef,
@@ -320,16 +325,67 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               </button>
             </div>
           )}
+
+          {/* 1-Click Game Launcher Overlay when NES has no custom ROM loaded */}
+          {game.id === 'nes' && !customRomBytes && (
+            <div className="absolute inset-0 z-20 bg-slate-950/90 backdrop-blur-xs flex flex-col items-center justify-center p-3 text-center space-y-2.5 overflow-y-auto">
+              <span className="text-xs sm:text-sm font-bold font-pixel text-amber-400">⚡ 1-CLICK INSTANT NES GAMES</span>
+              <p className="text-[11px] text-slate-300 max-w-sm">
+                Tap any game below to play immediately without downloading files:
+              </p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full max-w-md pt-1">
+                {INSTANT_ROMS.slice(0, 4).map((rom) => (
+                  <button
+                    key={rom.id}
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const { bytes, name } = await downloadAndParseRom(rom.url);
+                        onDirectBootRom(bytes, name);
+                      } catch (e) {
+                        console.error(e);
+                      }
+                    }}
+                    className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 active:scale-95 transition-all text-left flex flex-col justify-between group shadow"
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-white group-hover:text-amber-300 block truncate">{rom.title}</span>
+                      <span className="text-[9px] text-slate-400 block truncate">{rom.genre}</span>
+                    </div>
+                    <span className="text-[10px] text-amber-400 font-semibold mt-1">▶ Play Now</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={onOpenInstantLibrary}
+                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-colors shadow"
+                >
+                  ⚡ All Instant Games ({INSTANT_ROMS.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={onOpenRomModal}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg border border-slate-700 transition-colors"
+                >
+                  + Upload .zip / .nes
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Arcade Console Toolbar */}
-        <div className="w-full mt-3 pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+        {/* Arcade Console Toolbar (Responsive for Mobile) */}
+        <div className="w-full mt-3 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1.5 text-xs">
           {/* Left: Quick Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
               onClick={() => setIsPaused(!isPaused)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 isPaused
                   ? 'bg-amber-500 text-slate-950 font-bold'
                   : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
@@ -344,7 +400,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               title="Quick Save (F1)"
               className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors whitespace-nowrap"
             >
-              💾 Quick Save (F1)
+              💾 Save
             </button>
 
             <button
@@ -353,7 +409,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               title="Quick Load (F3)"
               className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors whitespace-nowrap"
             >
-              🔄 Quick Load (F3)
+              🔄 Load
             </button>
 
             <button
@@ -361,33 +417,31 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               onClick={onOpenSaveModal}
               className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors whitespace-nowrap"
             >
-              Manage Slots
+              Slots
             </button>
 
-            {(game.id === 'chip8' || game.id === 'nes') && (
-              <button
-                type="button"
-                onClick={onOpenRomModal}
-                className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-medium rounded-lg transition-colors whitespace-nowrap"
-              >
-                + Load ROM (.nes / .zip)
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={onOpenInstantLibrary}
+              className="px-2.5 py-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 rounded-lg font-medium transition-colors whitespace-nowrap"
+            >
+              ⚡ 1-Click ROMs
+            </button>
           </div>
 
           {/* Right: Screen & Audio Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {/* CRT Shader Toggle */}
             <button
               type="button"
               onClick={() => onUpdateSettings({ ...settings, crtScanlines: !settings.crtScanlines })}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+              className={`px-2 py-1.5 rounded-lg text-xs font-mono transition-colors ${
                 settings.crtScanlines
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                   : 'bg-slate-800 text-slate-400'
               }`}
             >
-              CRT Scanlines: {settings.crtScanlines ? 'ON' : 'OFF'}
+              CRT: {settings.crtScanlines ? 'ON' : 'OFF'}
             </button>
 
             {/* Sound Toggle */}
@@ -425,10 +479,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             <select
               value={settings.aspectRatio}
               onChange={(e) => onUpdateSettings({ ...settings, aspectRatio: e.target.value as any })}
-              className="bg-slate-800 text-slate-200 border border-slate-700 text-xs rounded-lg px-2 py-1.5 focus:outline-none"
+              className="bg-slate-800 text-slate-200 border border-slate-700 text-xs rounded-lg px-1.5 py-1.5 focus:outline-none"
             >
-              <option value="4:3">4:3 Retro</option>
-              <option value="16:9">16:9 Wide</option>
+              <option value="4:3">4:3</option>
+              <option value="16:9">16:9</option>
               <option value="stretch">Fill</option>
             </select>
 

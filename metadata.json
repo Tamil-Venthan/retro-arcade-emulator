@@ -1,0 +1,7 @@
+{
+  "name": "RetroArcade - Browser Emulator & Multiplayer Hub",
+  "description": "Play classic retro games free in your browser with 2-player multiplayer, physical controller support, save states, touch controls, and global high score leaderboards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
